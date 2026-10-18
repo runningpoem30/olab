@@ -1,6 +1,9 @@
 node_modules/
 backend/node_modules/
 backend/dist/
+frontend/node_modules/
+frontend/dist/
+frontend/tsconfig.tsbuildinfo
 backend/.env
 .env
 .DS_Store
