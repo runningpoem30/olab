@@ -10,7 +10,6 @@ import { reserveSendSlot, claimRateLimitNotification } from './services/rateLimi
 import { notifyRateLimitReached } from './services/slack';
 import { getSmtpTransport } from './services/smtp';
 import { runSearchIndexer } from './services/searchIndexer';
-import { ensureEmailIndex } from './services/emailSearch';
 
 async function processEmail(job: Job<EmailJobData>): Promise<void> {
   const email = await prisma.email.findUnique({
@@ -100,10 +99,7 @@ worker.on('error', (error) => console.error('BullMQ worker error', error));
 let stopDispatcher: (() => void) | undefined;
 let stopIndexer: (() => void) | undefined;
 void runOutboxDispatcher(emailQueue).then((stop) => { stopDispatcher = stop; });
-void ensureEmailIndex()
-  .then(() => runSearchIndexer())
-  .then((stop) => { stopIndexer = stop; })
-  .catch((error) => console.error('Search indexer initialization failed', error));
+void runSearchIndexer().then((stop) => { stopIndexer = stop; });
 
 async function shutdown(signal: string) {
   console.info(`${signal} received; shutting down worker`);

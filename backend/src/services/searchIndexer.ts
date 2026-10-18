@@ -1,5 +1,5 @@
 import { prisma } from '../db/prisma';
-import { indexEmail } from './emailSearch';
+import { ensureEmailIndex, indexEmail } from './emailSearch';
 
 const BATCH_SIZE = 100;
 const POLL_INTERVAL_MS = 2_000;
@@ -32,9 +32,12 @@ export async function runSearchIndexer(): Promise<() => void> {
   const tick = async () => {
     if (running) return;
     running = true;
-    try { await indexPendingEmails(); }
-    catch (error) { console.error('Search indexer failed', error); }
-    finally { running = false; }
+    try {
+      await ensureEmailIndex();
+      await indexPendingEmails();
+    } catch (error) {
+      console.error('Search indexer failed; will retry on the next interval', error);
+    } finally { running = false; }
   };
   await tick();
   const timer = setInterval(() => void tick(), POLL_INTERVAL_MS);
