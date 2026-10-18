@@ -7,7 +7,7 @@ A backend-first implementation of the ReachInbox scheduling assignment. The fron
 ### Backend
 
 - TypeScript + Express API with per-user email, sender, and status data boundaries.
-- Google OAuth login and session-based identity (`/auth/google`, `/auth/me`, `/auth/logout`).
+- Google OAuth login and session-based identity (`/auth/google`, `/auth/google/callback`, `/auth/me`, `/auth/logout`).
 - Transactional PostgreSQL scheduling records and queue outbox; request-level idempotency keys.
 - BullMQ delayed jobs on Redis; stable job IDs and a DB outbox dispatcher recover queue publication after process restarts.
 - Configurable worker concurrency (`WORKER_CONCURRENCY`, default `10`).
@@ -17,7 +17,7 @@ A backend-first implementation of the ReachInbox scheduling assignment. The fron
 - Ethereal SMTP transport with file/URL access disabled and TLS certificate verification enabled.
 - Elasticsearch indexing for scheduled and delivered/failed messages, with a DB-backed index reconciliation loop; search at `GET /api/emails/search?q=...`.
 - Auth-protected Bull Board at `/admin/queues`; health checks at `GET /api/health`.
-- Tests for request validation, BullMQ enqueue delay/idempotency configuration, and Redis limiter reservation semantics.
+- Tests for request validation, BullMQ enqueue delay/idempotency configuration, and Redis limiter reservation semantics; opt-in real Redis integration test covers quota reservation and delayed-job persistence.
 
 ### Frontend
 
@@ -92,7 +92,7 @@ The worker claims the transition from `SCHEDULED` to `SENDING` with a conditiona
 
 ## Search
 
-Elasticsearch is an index, not the source of truth. A worker reconciles rows where `searchIndexedAt` is null, indexing scheduled and terminal emails with stable IDs. This supports replay after a worker/index outage. The search endpoint requires at least two characters and only returns documents matching the authenticated user's `userId`.
+Elasticsearch is an index, not the source of truth. The worker-side reconciler indexes rows where `searchIndexedAt` is null, including scheduled and terminal email states, using stable IDs. This supports replay after a worker/index outage. The search endpoint requires at least two characters and only returns documents matching the authenticated user's `userId`.
 
 ## Migrations, tests, and build
 
@@ -101,12 +101,14 @@ cd backend
 npm run db:migrate
 npm run typecheck
 npm test
+# With Redis running:
+REDIS_URL=redis://localhost:6379 npm run test:integration:redis
 npm run build
 ```
 
 ## Known trade-offs / follow-up
 
-- Real Google, Slack, SMTP, and Elasticsearch calls require credentials and running services. Local integration/demo cannot be verified until these are configured.
+- Google/Slack OAuth and Ethereal SMTP live calls need credentials. Elasticsearch must be running for index/search verification. Those external integrations remain unverified until configured; real Redis and PostgreSQL checks have been run locally.
 - There is no frontend yet by explicit request. UI work follows design screenshots.
 - The Bull Board middleware currently requires a valid session; deployment should additionally gate it by operator role/network policy.
 - OAuth tokens/webhook URLs are stored in Postgres. Production deployment should encrypt integration secrets at rest and use a managed secret/KMS system.

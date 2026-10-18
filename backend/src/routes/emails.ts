@@ -36,10 +36,7 @@ emailsRouter.post('/', async (req, res, next) => {
 
   const data = parsed.data;
   const recipients = [...new Set(data.recipients.map((address) => address.trim().toLowerCase()))];
-  if (data.hourlyLimit !== undefined && recipients.length > data.hourlyLimit * 24) {
-    res.status(400).json({ error: 'This request exceeds the 24-hour scheduling horizon for the selected hourlyLimit' });
-    return;
-  }
+
   try {
     const result = await prisma.$transaction(async (tx) => {
       const sender = await tx.sender.upsert({

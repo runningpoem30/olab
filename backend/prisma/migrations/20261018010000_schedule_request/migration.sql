@@ -10,19 +10,19 @@ ALTER TABLE "Email" ADD COLUMN "scheduleRequestId" TEXT;
 ALTER TABLE "Email" ADD COLUMN "sendingLeaseUntil" TIMESTAMP(3);
 
 INSERT INTO "ScheduleRequest" ("id", "userId", "idempotencyKey", "createdAt")
-SELECT DISTINCT ON ("userId", split_part("idempotencyKey", ':', 1))
-    'legacy-' || md5("userId" || ':' || split_part("idempotencyKey", ':', 1)),
+SELECT DISTINCT ON ("userId", left("idempotencyKey", length("idempotencyKey") - length(substring("idempotencyKey" from ':[0-9]+$'))))
+    'legacy-' || md5("userId" || ':' || left("idempotencyKey", length("idempotencyKey") - length(substring("idempotencyKey" from ':[0-9]+$')))),
     "userId",
-    split_part("idempotencyKey", ':', 1),
-    MIN("createdAt") OVER (PARTITION BY "userId", split_part("idempotencyKey", ':', 1))
+    left("idempotencyKey", length("idempotencyKey") - length(substring("idempotencyKey" from ':[0-9]+$'))),
+    MIN("createdAt") OVER (PARTITION BY "userId", left("idempotencyKey", length("idempotencyKey") - length(substring("idempotencyKey" from ':[0-9]+$'))))
 FROM "Email"
-ORDER BY "userId", split_part("idempotencyKey", ':', 1), "createdAt";
+ORDER BY "userId", left("idempotencyKey", length("idempotencyKey") - length(substring("idempotencyKey" from ':[0-9]+$'))), "createdAt";
 
 UPDATE "Email" e
 SET "scheduleRequestId" = sr."id"
 FROM "ScheduleRequest" sr
 WHERE e."userId" = sr."userId"
-  AND split_part(e."idempotencyKey", ':', 1) = sr."idempotencyKey";
+  AND left(e."idempotencyKey", length(e."idempotencyKey") - length(substring(e."idempotencyKey" from ':[0-9]+$'))) = sr."idempotencyKey";
 
 ALTER TABLE "Email" ALTER COLUMN "scheduleRequestId" SET NOT NULL;
 CREATE UNIQUE INDEX "ScheduleRequest_userId_idempotencyKey_key" ON "ScheduleRequest"("userId", "idempotencyKey");

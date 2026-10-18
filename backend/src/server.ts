@@ -97,36 +97,6 @@ app.use('/admin/queues', (req, res, next) => {
   }
   next();
 }, boardAdapter.getRouter());
-app.get('/auth/csrf', (req, res) => {
-  req.session.csrfToken ??= randomBytes(32).toString('base64url');
-  res.json({ token: req.session.csrfToken });
-});
-
-app.get('/auth/me', async (req, res) => {
-  if (!req.session.userId) {
-    res.status(401).json({ error: 'Authentication required' });
-    return;
-  }
-  req.session.csrfToken ??= randomBytes(32).toString('base64url');
-  const user = await prisma.user.findUnique({ where: { id: req.session.userId }, select: { id: true, name: true, email: true, avatarUrl: true } });
-  if (!user) {
-    req.session.destroy(() => undefined);
-    res.status(401).json({ error: 'Session user no longer exists' });
-    return;
-  }
-  res.json({ ...user, csrfToken: req.session.csrfToken });
-});
-app.post('/auth/logout', (req, res, next) => {
-  req.logout((error) => {
-    if (error) return next(error);
-    req.session.destroy((destroyError) => {
-      if (destroyError) return next(destroyError);
-      res.clearCookie('connect.sid');
-      res.status(204).end();
-    });
-  });
-});
-
 app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
   console.error(error);
   res.status(500).json({ error: 'Internal server error' });
