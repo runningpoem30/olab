@@ -108,7 +108,7 @@ npm run build
 
 ## Known trade-offs / follow-up
 
-- Google/Slack OAuth and Ethereal SMTP live calls need credentials. Elasticsearch must be running for index/search verification. Those external integrations remain unverified until configured; real Redis and PostgreSQL checks have been run locally.
+- Credentials are configured locally; Ethereal SMTP send and worker delivery, Google authorization redirect generation, PostgreSQL migrations, and Redis behavior have been verified. Complete Google/Slack browser consent and live Slack notification verification remain. Elasticsearch must be running to verify indexing and search.
 - There is no frontend yet by explicit request. UI work follows design screenshots.
 - The Bull Board middleware currently requires a valid session; deployment should additionally gate it by operator role/network policy.
 - OAuth tokens/webhook URLs are stored in Postgres. Production deployment should encrypt integration secrets at rest and use a managed secret/KMS system.
