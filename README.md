@@ -37,7 +37,7 @@ The Vite development server runs at `http://localhost:5175` and proxies `/api`, 
 ## Requirements
 
 - Node.js 22+
-- Docker Compose (or local PostgreSQL 16+, Redis 7+, Elasticsearch 8.x)
+- Docker Desktop/Compose (or local PostgreSQL 14+, Redis 7+, Elasticsearch 8.x)
 - Google OAuth web credentials, Slack OAuth app credentials, and Ethereal SMTP account for live integrations
 
 ## Run locally
@@ -65,7 +65,7 @@ Health endpoint: `http://localhost:3001/api/health`. Queue dashboard: `http://lo
 
 Generate an Ethereal test account at https://ethereal.email/create, then put its username and password in `ETHEREAL_USER` and `ETHEREAL_PASS`. Ethereal does not deliver messages to real recipients; inspect the Ethereal preview/link and mailbox for demo verification.
 
-Configure Google OAuth redirect URI to `http://localhost:3001/auth/google/callback`. Configure Slack redirect URI to `http://localhost:3001/auth/slack/callback` and add the `incoming-webhook` OAuth scope. Use HTTPS/public URLs outside localhost. Ensure `SESSION_SECRET` and `SLACK_STATE_SECRET` are strong random secrets in deployment.
+Configure Google OAuth JavaScript origin `http://localhost:5175` and redirect URI `http://localhost:3001/auth/google/callback`. Separately, in Slack App Settings → OAuth & Permissions → Redirect URLs, add the exact URL `http://localhost:3001/auth/slack/callback`, save it, and include the `incoming-webhook` OAuth scope. Slack and Google maintain separate redirect allowlists. Use HTTPS/public URLs outside localhost. Ensure `SESSION_SECRET` and `SLACK_STATE_SECRET` are strong random secrets in deployment.
 
 ## Schedule API
 
@@ -113,7 +113,7 @@ npm run db:migrate
 npm run typecheck
 npm test
 # With Redis running:
-REDIS_URL=redis://localhost:6379 npm run test:integration:redis
+REDIS_URL=redis://localhost:6380 npm run test:integration:redis
 npm run build
 ```
 
