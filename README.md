@@ -32,7 +32,7 @@ npm ci
 npm run dev
 ```
 
-The Vite development server runs at `http://localhost:5173` and proxies `/api`, `/auth`, and `/admin` to the local backend on port `3001`. Configure that exact origin as a Google OAuth JavaScript origin, with callback `http://localhost:3001/auth/google/callback`.
+The Vite development server runs at `http://localhost:5175` and proxies `/api`, `/auth`, and `/admin` to the local backend on port `3001`. Configure `http://localhost:5175` as a Google OAuth JavaScript origin. The authorized redirect URI stays `http://localhost:3001/auth/google/callback`.
 
 ## Requirements
 
