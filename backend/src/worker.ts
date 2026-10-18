@@ -30,6 +30,10 @@ async function processEmail(job: Job<EmailJobData>): Promise<void> {
   if (slot.rateLimitedWindow !== null && await claimRateLimitNotification(email.senderId, slot.rateLimitedWindow)) {
     try {
       await notifyRateLimitReached(email.senderId, slot.rateLimitedWindow);
+      console.info('Slack rate-limit notification delivered', {
+        senderId: email.senderId,
+        windowStart: new Date(slot.rateLimitedWindow).toISOString(),
+      });
     } catch (error) {
       console.error('Slack rate-limit notification failed', error);
     }
