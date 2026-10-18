@@ -7,13 +7,13 @@ Verification performed on 2026-10-18. This records observed results only; blocke
 | Check | Result | Evidence |
 | --- | --- | --- |
 | TypeScript typecheck | Pass | `cd backend && npm run typecheck` |
-| Unit tests | Pass: 9 tests | `cd backend && npm test` |
+| Unit tests | Pass: 10 tests | `cd backend && npm test` |
 | Production build | Pass | `cd backend && npm run build` |
 | Prisma schema validation | Pass | `DATABASE_URL=... npx prisma validate` |
 | PostgreSQL migrations | Pass | Applied both committed migrations to isolated local databases and confirmed migration status. A legacy-schema fixture with `campaign:part:0` and `campaign:part:1` backfilled both emails to the exact request key `campaign:part`. No existing database was modified. |
 | Redis rate-limit coordination | Pass: 2 integration tests | Verified against the user's local Redis at `localhost:6379`: idempotent reservation, quota overflow to next hour, and BullMQ delayed job state surviving queue close/reopen. |
-| API health | Pass | Started rebuilt API with isolated PostgreSQL and Redis; `GET /api/health` returned 200 with both dependencies `ok`. |
-| Auth route protection | Pass | `GET /auth/me` returned 401 without a session; `GET /api/emails` returned 401. |
+| API health | Pass | Current local API on port 3001 uses the separate `reachinbox_demo` database and Redis; `GET /api/health` returns 200 with both dependencies `ok`. |
+| Auth route protection | Pass | `GET /auth/me` returned 401 without a session; `GET /api/emails` returned 401. The actual browser login callback is still pending. |
 | CSRF | Pass | `GET /auth/csrf` returned a session token; `POST /auth/logout` without its header returned 403. |
 | Google OAuth configuration | Pass, redirect only | With configured credentials, `GET /auth/google` returned 302 to `accounts.google.com`, with callback `http://localhost:3001/auth/google/callback`, `profile email` scopes, client ID present, and OAuth `state` present. Browser consent/callback remains unverified. |
 | Ethereal SMTP delivery | Pass | SMTP `verify()` succeeded and one labeled test message was accepted by Ethereal. The preview URL was provided in the local verification session. |
