@@ -31,6 +31,14 @@ export function Inbox({ folder, emails, loading, error, onSearch, onRefresh, onO
         <button type="button" className={showFilters ? 'icon-button selected' : 'icon-button'} aria-label="Filter emails" onClick={() => setShowFilters(!showFilters)}><Filter size={15} /></button>
         <button type="button" className="icon-button" aria-label="Refresh emails" onClick={onRefresh}><RefreshCw size={15} /></button>
       </header>
+      <div className="inbox-heading">
+        <div>
+          <span className="eyebrow">MAILBOX</span>
+          <h1>{title} emails <span className="heading-count">{emails.length}</span></h1>
+          <p>{folder === 'scheduled' ? 'Keep an eye on what’s queued to go out.' : 'A record of the messages your workspace has sent.'}</p>
+        </div>
+        <span className="live-indicator"><i />Live updates</span>
+      </div>
       {showFilters && <div className="filter-note">Showing {folder === 'scheduled' ? 'scheduled and sending' : 'sent and failed'} messages</div>}
       {error && <div className="inline-error"><strong>Could not load {title.toLowerCase()} emails.</strong><span>{error}</span><button type="button" onClick={onRefresh}>Try again</button></div>}
       {loading ? <div className="inbox-state"><span className="spinner" />Loading {title.toLowerCase()} emails…</div>

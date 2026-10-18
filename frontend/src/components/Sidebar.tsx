@@ -10,10 +10,11 @@ interface SidebarProps {
   onLogout: () => void;
   onSlackConnect: () => void;
   slackConnected: boolean;
+  slackTeamName: string | null;
   onSlackDisconnect: () => void;
 }
 
-export function Sidebar({ user, activeFolder, counts, onChangeFolder, onCompose, onLogout, onSlackConnect, slackConnected, onSlackDisconnect }: SidebarProps) {
+export function Sidebar({ user, activeFolder, counts, onChangeFolder, onCompose, onLogout, onSlackConnect, slackConnected, slackTeamName, onSlackDisconnect }: SidebarProps) {
   return (
     <aside className="sidebar">
       <div className="brand-mark"><span>O</span>MB</div>
@@ -35,7 +36,7 @@ export function Sidebar({ user, activeFolder, counts, onChangeFolder, onCompose,
         </button>
       </nav>
       <div className="sidebar-bottom">
-        {slackConnected ? <button type="button" className="quiet-nav" onClick={onSlackDisconnect}><Settings2 size={15} />Disconnect Slack</button> : <button type="button" className="quiet-nav" onClick={onSlackConnect}><Settings2 size={15} />Connect Slack</button>}
+        {slackConnected ? <button type="button" className="quiet-nav slack-nav connected" onClick={onSlackDisconnect}><span className="connection-dot" /><Settings2 size={15} />Slack connected{slackTeamName ? ` · ${slackTeamName}` : ''}</button> : <button type="button" className="quiet-nav slack-nav" onClick={onSlackConnect}><span className="connection-dot offline" /><Settings2 size={15} />Connect Slack</button>}
         <a className="quiet-nav" href="mailto:support@reachinbox.ai"><CircleHelp size={15} />Help</a>
         <button type="button" className="quiet-nav logout-link" onClick={onLogout}><LogOut size={15} />Log out</button>
       </div>

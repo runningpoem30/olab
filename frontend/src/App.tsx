@@ -19,6 +19,7 @@ export default function App() {
   const [counts, setCounts] = useState({ scheduled: 0, sent: 0 });
   const [senders, setSenders] = useState<Sender[]>([]);
   const [slackConnected, setSlackConnected] = useState(false);
+  const [slackTeamName, setSlackTeamName] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<'inbox' | 'compose' | 'detail'>('inbox');
@@ -34,7 +35,11 @@ export default function App() {
       if (!active) return;
       setUser(current);
       void getSenders().then((items) => { if (active) setSenders(items); }).catch(() => undefined);
-      void getSlackConnection().then((connection) => { if (active) setSlackConnected(connection.connected); }).catch(() => undefined);
+      void getSlackConnection().then((connection) => {
+        if (!active) return;
+        setSlackConnected(connection.connected);
+        setSlackTeamName(connection.teamName);
+      }).catch(() => undefined);
     }).catch((reason: unknown) => {
       if (active && reason instanceof TypeError) setAuthError('Backend unavailable. Start the API on port 3001, then reload.');
     }).finally(() => { if (active) setAuthLoading(false); });
@@ -72,6 +77,7 @@ export default function App() {
     try {
       await disconnectSlack();
       setSlackConnected(false);
+      setSlackTeamName(null);
       setToast('Slack disconnected.');
     } catch (reason) {
       setToast(reason instanceof Error ? reason.message : 'Unable to disconnect Slack.');
@@ -100,13 +106,13 @@ export default function App() {
 
   return (
     <div className="app-frame">
-      <Sidebar user={user} activeFolder={folder} counts={counts} onChangeFolder={(next) => { setFolder(next); setView('inbox'); }} onCompose={() => setView('compose')} onLogout={() => void handleLogout()} onSlackConnect={() => { window.location.href = '/auth/slack/connect'; }} slackConnected={slackConnected} onSlackDisconnect={() => void handleSlackDisconnect()} />
+      <Sidebar user={user} activeFolder={folder} counts={counts} onChangeFolder={(next) => { setFolder(next); setView('inbox'); }} onCompose={() => setView('compose')} onLogout={() => void handleLogout()} onSlackConnect={() => { window.location.href = '/auth/slack/connect'; }} slackConnected={slackConnected} slackTeamName={slackTeamName} onSlackDisconnect={() => void handleSlackDisconnect()} />
       <div className="workspace">
         {view === 'compose' ? <Compose user={user} senders={senders} onClose={() => setView('inbox')} onSchedule={handleSchedule} />
           : view === 'detail' && selectedEmail ? <EmailDetail email={selectedEmail} onBack={() => setView('inbox')} />
             : <Inbox folder={folder} emails={emails} loading={loading} error={error} onSearch={(query) => { window.clearTimeout(searchTimer); searchTimer = window.setTimeout(() => { void refreshEmails(query); }, 250); }} onRefresh={() => setRefreshKey((key) => key + 1)} onOpenEmail={openDetail} />}
       </div>
-      {(toast || slackStatus === 'connected') && <div className="toast" role="status"><InboxIcon size={16} />{toast ?? 'Slack is connected.'}<button type="button" onClick={() => { setToast(null); if (slackStatus) window.history.replaceState({}, '', window.location.pathname); }} aria-label="Dismiss"><LogOut size={14} /></button></div>}
+      {(toast || slackStatus) && <div className={slackStatus === 'error' ? 'toast error-toast' : 'toast'} role="status"><InboxIcon size={16} />{toast ?? (slackStatus === 'connected' ? `Slack connected${slackTeamName ? ` to ${slackTeamName}` : ''}.` : 'Slack could not be connected. Check app redirect URLs and try again.')}<button type="button" onClick={() => { setToast(null); if (slackStatus) window.history.replaceState({}, '', window.location.pathname); }} aria-label="Dismiss"><LogOut size={14} /></button></div>}
     </div>
   );
 }

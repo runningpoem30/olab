@@ -1,4 +1,4 @@
-import { ArrowRight, Mail } from 'lucide-react';
+import { ArrowRight, ShieldCheck } from 'lucide-react';
 
 export function Login({ message }: { message?: string | null }) {
   return (
@@ -8,20 +8,13 @@ export function Login({ message }: { message?: string | null }) {
         <h1>Login</h1>
         <p className="login-subtitle">Sign in to your ReachInbox workspace</p>
         {message && <div className="login-error" role="alert">{message}</div>}
+        <div className="login-security"><ShieldCheck size={16} /><span>Secure workspace access</span></div>
         <a className="google-button" href="/auth/google">
           <span className="google-g">G</span>
-          Login with Google
+          Continue with Google
           <ArrowRight size={16} />
         </a>
-        <div className="login-divider"><span />or sign up through email<span /></div>
-        <form className="email-login" onSubmit={(event) => event.preventDefault()}>
-          <label className="sr-only" htmlFor="email">Email ID</label>
-          <div className="login-input"><Mail size={17} /><input id="email" type="email" placeholder="Email ID" disabled /></div>
-          <label className="sr-only" htmlFor="password">Password</label>
-          <input id="password" type="password" placeholder="Password" disabled />
-          <button type="button" className="login-submit" disabled>Login</button>
-          <p className="login-note">Email and password sign-in is not enabled for this workspace.</p>
-        </form>
+        <p className="login-note">Only your profile identity is used. Your mailbox credentials stay private.</p>
       </div>
     </main>
   );
