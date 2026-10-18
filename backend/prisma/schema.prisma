@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String          @id @default(cuid())
+  googleId           String          @unique
+  email              String          @unique
+  name               String
+  avatarUrl          String?
+  slackWebhookUrl    String?
+  slackTeamId        String?
+  slackTeamName      String?
+  senders            Sender[]
+  emails             Email[]
+  scheduleRequests   ScheduleRequest[]
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+}
+
+model ScheduleRequest {
+  id             String   @id @default(cuid())
+  userId         String
+  idempotencyKey String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emails         Email[]
+  createdAt      DateTime @default(now())
+
+  @@unique([userId, idempotencyKey])
+}
+
+model Sender {
+  id        String   @id @default(cuid())
+  userId    String
+  address   String
+  label     String?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emails    Email[]
+  createdAt DateTime @default(now())
+
+  @@unique([userId, address])
+  @@index([userId])
+}
+
+model Email {
+  id              String      @id @default(cuid())
+  userId          String
+  senderId        String
+  scheduleRequestId String
+  recipient       String
+  subject         String
+  body            String      @db.Text
+  scheduledAt     DateTime
+  delayBetweenEmailsMs Int      @default(2000)
+  hourlyLimit     Int?
+  status          EmailStatus @default(SCHEDULED)
+  sentAt          DateTime?
+  failedAt        DateTime?
+  sendingLeaseUntil DateTime?
+  failureReason   String?     @db.Text
+  idempotencyKey  String
+  searchIndexedAt DateTime?
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sender          Sender      @relation(fields: [senderId], references: [id], onDelete: Restrict)
+  scheduleRequest ScheduleRequest @relation(fields: [scheduleRequestId], references: [id], onDelete: Cascade)
+  outbox          QueueOutbox?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@unique([userId, idempotencyKey])
+  @@index([scheduleRequestId])
+  @@index([userId, status, scheduledAt])
+  @@index([senderId, status, scheduledAt])
+}
+
+model QueueOutbox {
+  id          String    @id @default(cuid())
+  emailId     String    @unique
+  availableAt DateTime  @default(now())
+  enqueuedAt  DateTime?
+  attempts    Int       @default(0)
+  lastError   String?   @db.Text
+  email       Email     @relation(fields: [emailId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@index([enqueuedAt, availableAt])
+}
+
+enum EmailStatus {
+  SCHEDULED
+  SENDING
+  SENT
+  FAILED
+}

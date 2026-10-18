@@ -8,6 +8,7 @@
     "dev:api": "tsx watch src/server.ts",
     "dev:worker": "tsx watch src/worker.ts",
     "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
     "start:api": "node dist/server.js",
     "start:worker": "node dist/worker.js",
     "db:generate": "prisma generate",
@@ -28,7 +29,7 @@
     "express": "^5.1.0",
     "express-session": "^1.18.1",
     "ioredis": "^5.6.1",
-    "nodemailer": "^6.10.1",
+    "nodemailer": "^10.1.2",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "zod": "^3.25.28"
@@ -44,6 +45,6 @@
     "prisma": "^6.9.0",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3",
-    "vitest": "^3.2.2"
+    "vitest": "^3.2.7"
   }
 }
