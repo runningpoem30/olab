@@ -21,7 +21,18 @@ A backend-first implementation of the ReachInbox scheduling assignment. The fron
 
 ### Frontend
 
-- Not implemented yet by request; will be built after Figma screenshots are supplied.
+- Figma-matched React + TypeScript dashboard at `frontend/`, with Google OAuth login, scheduled/sent inbox views, search, compose, CSV/text recipient import, delayed-send picker, email details, and logout.
+- UI uses the authenticated backend API and shows real loading, error, and empty states (no sample email records).
+
+## Run the frontend locally
+
+```sh
+cd frontend
+npm ci
+npm run dev
+```
+
+The Vite development server runs at `http://localhost:5173` and proxies `/api`, `/auth`, and `/admin` to the local backend on port `3001`. Configure that exact origin as a Google OAuth JavaScript origin, with callback `http://localhost:3001/auth/google/callback`.
 
 ## Requirements
 
