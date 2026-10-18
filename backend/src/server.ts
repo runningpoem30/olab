@@ -77,7 +77,7 @@ app.get('/auth/me', async (req, res) => {
     res.status(401).json({ error: 'Session user no longer exists' });
     return;
   }
-  res.json({ ...user, csrfToken: req.session.csrfToken });
+  res.json({ ...user, csrfToken: req.session.csrfToken, defaultSender: env.ETHEREAL_USER ?? null });
 });
 app.post('/auth/logout', (req, res, next) => {
   req.logout((error) => {

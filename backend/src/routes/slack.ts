@@ -79,6 +79,18 @@ slackRouter.get('/callback', async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
+slackRouter.get('/connection', async (req, res, next) => {
+  if (!req.session.userId) { res.status(401).json({ error: 'Authentication required' }); return; }
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.session.userId },
+      select: { slackWebhookUrl: true, slackTeamId: true, slackTeamName: true },
+    });
+    if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+    res.json({ connected: Boolean(user.slackWebhookUrl), teamId: user.slackTeamId, teamName: user.slackTeamName });
+  } catch (error) { next(error); }
+});
+
 slackRouter.delete('/connection', async (req, res, next) => {
   if (!req.session.userId) { res.status(401).json({ error: 'Authentication required' }); return; }
   try {

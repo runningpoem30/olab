@@ -24,6 +24,19 @@ function requireUser(req: Request, res: Response): string | undefined {
   return req.session.userId;
 }
 
+emailsRouter.get('/senders', async (req, res, next) => {
+  const userId = requireUser(req, res);
+  if (!userId) return;
+  try {
+    const senders = await prisma.sender.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'asc' },
+      select: { id: true, address: true, label: true },
+    });
+    res.json({ data: senders });
+  } catch (error) { next(error); }
+});
+
 emailsRouter.post('/', async (req, res, next) => {
   const userId = requireUser(req, res);
   if (!userId) return;
@@ -111,26 +124,36 @@ emailsRouter.get('/', async (req, res, next) => {
   const userId = requireUser(req, res);
   if (!userId) return;
 
-  const status = typeof req.query.status === 'string' ? req.query.status.toUpperCase() : undefined;
-  if (status && !Object.values(EmailStatus).includes(status as EmailStatus)) {
+  const requestedStatus = typeof req.query.status === 'string' ? req.query.status.toLowerCase() : undefined;
+  if (requestedStatus && !['scheduled', 'sending', 'sent', 'failed'].includes(requestedStatus)) {
     res.status(400).json({ error: 'status must be scheduled, sending, sent, or failed' });
     return;
   }
+  const statuses: EmailStatus[] | undefined = requestedStatus === 'scheduled'
+    ? [EmailStatus.SCHEDULED, EmailStatus.SENDING]
+    : requestedStatus === 'sent'
+      ? [EmailStatus.SENT, EmailStatus.FAILED]
+      : requestedStatus ? [requestedStatus.toUpperCase() as EmailStatus] : undefined;
   const limit = Math.min(Number(req.query.limit) || 50, 200);
   const cursor = typeof req.query.cursor === 'string' ? req.query.cursor : undefined;
   try {
-    const emails = await prisma.email.findMany({
-      where: { userId, ...(status ? { status: status as EmailStatus } : {}) },
-      orderBy: [{ scheduledAt: 'asc' }, { id: 'asc' }],
-      take: limit + 1,
-      ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
-      include: { sender: { select: { address: true } } },
-    });
+    const where = { userId, ...(statuses ? { status: { in: statuses } } : {}) };
+      const [emails, total] = await prisma.$transaction([
+      prisma.email.findMany({
+        where,
+        orderBy: [{ scheduledAt: 'asc' }, { id: 'asc' }],
+        take: limit + 1,
+        ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+        include: { sender: { select: { address: true } } },
+      }),
+      prisma.email.count({ where }),
+    ]);
     const hasMore = emails.length > limit;
     const page = hasMore ? emails.slice(0, limit) : emails;
     res.json({
       data: page.map(({ sender, ...email }) => ({ ...email, sender: sender.address })),
       nextCursor: hasMore ? page[page.length - 1]?.id ?? null : null,
+      total,
     });
   } catch (error) {
     next(error);
