@@ -5,7 +5,7 @@ import { EmailDetail } from './components/EmailDetail';
 import { Inbox } from './components/Inbox';
 import { Login } from './components/Login';
 import { Sidebar } from './components/Sidebar';
-import { disconnectSlack, getCurrentUser, getEmails, getSenders, getSlackConnection, logout, scheduleEmails } from './lib/api';
+import { authUrl, disconnectSlack, getCurrentUser, getEmails, getSenders, getSlackConnection, logout, scheduleEmails } from './lib/api';
 import type { EmailRecord, Sender, User } from './types/api';
 
 let searchTimer = 0;
@@ -106,7 +106,7 @@ export default function App() {
 
   return (
     <div className="app-frame">
-      <Sidebar user={user} activeFolder={folder} counts={counts} onChangeFolder={(next) => { setFolder(next); setView('inbox'); }} onCompose={() => setView('compose')} onLogout={() => void handleLogout()} onSlackConnect={() => { window.location.href = '/auth/slack/connect'; }} slackConnected={slackConnected} slackTeamName={slackTeamName} onSlackDisconnect={() => void handleSlackDisconnect()} />
+      <Sidebar user={user} activeFolder={folder} counts={counts} onChangeFolder={(next) => { setFolder(next); setView('inbox'); }} onCompose={() => setView('compose')} onLogout={() => void handleLogout()} onSlackConnect={() => { window.location.href = authUrl('/auth/slack/connect'); }} slackConnected={slackConnected} slackTeamName={slackTeamName} onSlackDisconnect={() => void handleSlackDisconnect()} />
       <div className="workspace">
         {view === 'compose' ? <Compose user={user} senders={senders} onClose={() => setView('inbox')} onSchedule={handleSchedule} />
           : view === 'detail' && selectedEmail ? <EmailDetail email={selectedEmail} onBack={() => setView('inbox')} />
