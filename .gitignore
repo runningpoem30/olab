@@ -9,3 +9,7 @@ backend/.env
 .DS_Store
 *.log
 coverage/
+/reference/
+/docs/
+.docker-config/
+.vercel/
