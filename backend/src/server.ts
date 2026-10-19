@@ -7,7 +7,7 @@ import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { createBullBoard } from '@bull-board/api';
 import { ExpressAdapter } from '@bull-board/express';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
-import { env } from './config/env';
+import { env, frontendAllowedOrigins } from './config/env';
 import { prisma } from './db/prisma';
 import { emailQueue } from './queue/emailQueue';
 import { redisConnection } from './queue/connection';
@@ -22,14 +22,26 @@ boardAdapter.setBasePath('/admin/queues');
 createBullBoard({ queues: [new BullMQAdapter(emailQueue)], serverAdapter: boardAdapter });
 
 app.set('trust proxy', 1);
-app.use(cors({ origin: env.FRONTEND_ORIGIN, credentials: true }));
+const allowedOrigins = new Set(frontendAllowedOrigins);
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.has(origin)) { callback(null, true); return; }
+    callback(new Error('Origin is not allowed by CORS'));
+  },
+  credentials: true,
+}));
 app.use(express.json({ limit: '1mb' }));
 app.use(session({
   store: new RedisStore({ client: redisConnection, prefix: 'session:' }),
   secret: env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
-  cookie: { httpOnly: true, sameSite: 'lax', secure: env.NODE_ENV === 'production', maxAge: 7 * 24 * 60 * 60 * 1000 },
+  cookie: {
+    httpOnly: true,
+    sameSite: env.SESSION_COOKIE_SAME_SITE,
+    secure: env.NODE_ENV === 'production' || env.SESSION_COOKIE_SAME_SITE === 'none',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  },
 }));
 app.use(passport.initialize());
 app.use(passport.session());
@@ -84,7 +96,11 @@ app.post('/auth/logout', (req, res, next) => {
     if (error) return next(error);
     req.session.destroy((destroyError) => {
       if (destroyError) return next(destroyError);
-      res.clearCookie('connect.sid');
+      res.clearCookie('connect.sid', {
+        httpOnly: true,
+        sameSite: env.SESSION_COOKIE_SAME_SITE,
+        secure: env.NODE_ENV === 'production' || env.SESSION_COOKIE_SAME_SITE === 'none',
+      });
       res.status(204).end();
     });
   });

@@ -6,6 +6,8 @@ const schema = z.object({
   PORT: z.coerce.number().int().positive().default(3001),
   APP_BASE_URL: z.string().url().default('http://localhost:3001'),
   FRONTEND_ORIGIN: z.string().url().default('http://localhost:5175'),
+  FRONTEND_ALLOWED_ORIGINS: z.string().default('http://localhost:5175'),
+  SESSION_COOKIE_SAME_SITE: z.enum(['lax', 'none']).default('lax'),
   SESSION_SECRET: z.string().min(16).default('development-only-change-me'),
   DATABASE_URL: z.string().default('postgresql://reachinbox:reachinbox@localhost:5432/reachinbox?schema=public'),
   REDIS_URL: z.string().url().default('redis://localhost:6379'),
@@ -24,8 +26,14 @@ const schema = z.object({
   SLACK_CLIENT_ID: z.string().optional(),
   SLACK_CLIENT_SECRET: z.string().optional(),
   SLACK_REDIRECT_URI: z.string().url().default('http://localhost:3001/auth/slack/callback'),
+  SLACK_SUCCESS_REDIRECT_URL: z.string().url().default('http://localhost:5175/'),
   SLACK_STATE_SECRET: z.string().min(16).default('development-only-slack-secret'),
 });
 
 export const env = schema.parse(process.env);
+export const frontendAllowedOrigins = env.FRONTEND_ALLOWED_ORIGINS
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean)
+  .map((origin) => new URL(origin).origin);
 export type Environment = typeof env;

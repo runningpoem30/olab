@@ -75,7 +75,9 @@ slackRouter.get('/callback', async (req, res, next) => {
         slackTeamName: tokenData.team?.name ?? null,
       },
     });
-    res.redirect(`${env.FRONTEND_ORIGIN}/settings?slack=connected`);
+    const redirect = new URL(env.SLACK_SUCCESS_REDIRECT_URL);
+    redirect.searchParams.set('slack', 'connected');
+    res.redirect(redirect.toString());
   } catch (error) { next(error); }
 });
 
