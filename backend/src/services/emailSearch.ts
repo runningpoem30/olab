@@ -8,12 +8,16 @@ interface ElasticsearchResponse {
 }
 
 function authHeaders(): HeadersInit {
-  return { 'content-type': 'application/json' };
+  return {
+    'content-type': 'application/json',
+    ...(env.ELASTICSEARCH_API_KEY ? { authorization: `ApiKey ${env.ELASTICSEARCH_API_KEY}` } : {}),
+  };
 }
+
 
 export async function ensureEmailIndex(): Promise<void> {
   const url = `${env.ELASTICSEARCH_URL}/${env.ELASTICSEARCH_INDEX}`;
-  const exists = await fetch(url, { method: 'HEAD' });
+  const exists = await fetch(url, { method: 'HEAD', headers: authHeaders() });
   if (exists.ok) return;
   if (exists.status !== 404) throw new Error(`Elasticsearch index check failed (${exists.status})`);
   const created = await fetch(url, {

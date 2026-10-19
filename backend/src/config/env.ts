@@ -12,6 +12,7 @@ const schema = z.object({
   DATABASE_URL: z.string().default('postgresql://reachinbox:reachinbox@localhost:5432/reachinbox?schema=public'),
   REDIS_URL: z.string().url().default('redis://localhost:6379'),
   ELASTICSEARCH_URL: z.string().url().default('http://localhost:9200'),
+  ELASTICSEARCH_API_KEY: z.string().optional(),
   ELASTICSEARCH_INDEX: z.string().default('emails'),
   WORKER_CONCURRENCY: z.coerce.number().int().positive().default(10),
   MIN_SEND_INTERVAL_MS: z.coerce.number().int().nonnegative().default(2000),
